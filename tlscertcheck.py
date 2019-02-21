@@ -2,8 +2,7 @@
 #
 
 import os.path, sys, getopt, socket
-from datetime import datetime
-from M2Crypto import SSL, X509
+from M2Crypto import SSL
 
 
 # Options with initialized defaults
@@ -192,16 +191,13 @@ def get_ssl_connection(ctx):
         try:
             conn.set_tlsext_host_name(Opts.sni)
         except AttributeError:
-            # Some M2Crypto version's don't have this function.
             if not Opts.nowarn:
                 print("DEBUG: warning: set_tlsext_host_name() not found")
-            pass
         try:
             conn.set1_host(Opts.sni)
         except AttributeError:
             if not Opts.nowarn:
                 print("DEBUG: warning: set1_host() not found")
-            pass
     return conn
 
 
@@ -209,9 +205,9 @@ def get_certid(cert):
     """return certificate identification string"""
     if Opts.usefp:
         return cert.get_fingerprint(md='sha1')
-    else:
-        return "%x:%x" % (cert.get_serial_number(),
-                          cert.get_issuer().as_hash())
+
+    return "%x:%x" % (cert.get_serial_number(),
+                      cert.get_issuer().as_hash())
 
 
 def cert_inception(cert):
@@ -300,7 +296,6 @@ def check_tls(ipaddr, hostname, ctx, certdb):
         if Opts.sni:
             print("ERROR: Certificate name mismatch")
             Stats.error += 1
-        pass
 
     Stats.ok += 1
 

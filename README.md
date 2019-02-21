@@ -74,8 +74,3 @@ to connect to servers by IP address.
 
 The "--noverify" option can be used to turn off certificate verification.
 
-
-Possible Future Enhancements:
-* Multi-threaded operation
-* Support IPv6
-
