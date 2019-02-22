@@ -1,12 +1,17 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 #
+
+"""
+tlscertcheck.py: TLS certificate checking tool.
+
+"""
 
 import os.path, sys, getopt, socket
 from M2Crypto import SSL
 
 
-# Options with initialized defaults
 class Opts:
+    """Options class with initialized defaults"""
     port = 443
     verbose = False
     sni = None
@@ -22,8 +27,8 @@ class Opts:
     nowarn = False
 
 
-# Statistics
 class Stats:
+    """Statistics class"""
     total_cnt = 0
     match_ok = 0
     match_fail = 0
@@ -36,7 +41,7 @@ def usage(msg=None):
     if msg:
         print("{}\n".format(msg))
     print("""\
-Usage: {} [Options] <ipaddr1> <ipaddr2> ...
+Usage: {} [Options] <host1> <host2> ...
 
     Options:
     --help            Print this help message
@@ -58,7 +63,6 @@ Usage: {} [Options] <ipaddr1> <ipaddr2> ...
 
 def process_args(arguments):
     """Process command line arguments"""
-    global verbose
 
     longopts = [
         "help",
@@ -112,10 +116,10 @@ def process_args(arguments):
         usage("Error: contradictory options specified: --verbose and --silent")
 
     if Opts.infile and args:
-        usage("Error: With --infile no IPs are specified on command line")
+        usage("Error: With --infile no IP/hosts are specified on command line")
 
     if not Opts.infile and not args:
-        usage("Error: need list of IP addresses to check")
+        usage("Error: need list of IP addresses or hosts to check")
 
     return args
 
@@ -141,6 +145,55 @@ class CertDB:
         for certid, val in self.db.items():
             cert, iplist = val
             print("## [{}] {} {}".format(len(iplist), certid, ','.join(iplist)))
+
+
+class Server:
+
+    """
+    Server Class: holds a server IP address, and its associated
+    address family and hostname.
+    """
+
+    def __init__(self, ip=None, family=None, host=None):
+        self.ip = ip
+        self.family = family
+        self.host = host
+
+    def __str__(self):
+        return "<Server>: {} {} {}".format(self.ip, self.family, self.host)
+
+
+def getServers(arg):
+
+    """
+    Return a list of Server objects for each IP/host
+    """
+
+    try:
+        _ = socket.inet_pton(socket.AF_INET, arg)
+        return [Server(ip=arg, family=socket.AF_INET, host=get_hostname(arg))]
+    except OSError:
+        pass
+
+    try:
+        _ = socket.inet_pton(socket.AF_INET6, arg)
+        return [Server(ip=arg, family=socket.AF_INET6, host=get_hostname(arg))]
+    except OSError:
+        pass
+
+    slist = []
+    try:
+        ai_list = socket.getaddrinfo(arg, 443, socket.AF_UNSPEC,
+                                     socket.SOCK_STREAM)
+    except socket.gaierror as e:
+        print("ERROR: getaddrinfo({}): {}".format(arg, e))
+        return None
+    else:
+        for family, stype, proto, canonname, sockaddr in ai_list:
+            ip = sockaddr[0]
+            slist.append(Server(ip=ip, family=family, host=arg))
+
+    return slist
 
 
 def get_iplist_iterator(args):
@@ -176,14 +229,14 @@ def get_ssl_context():
     """return SSL context object"""
     ctx = SSL.Context()
     if not Opts.noverify:
-        ctx.load_verify_locations(cafile = Opts.cacert)
+        ctx.load_verify_locations(cafile=Opts.cacert)
         ctx.set_verify(SSL.verify_peer, 10)
     return ctx
 
 
-def get_ssl_connection(ctx):
+def get_ssl_connection(ctx, ipfamily):
     """return SSL connection object"""
-    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    sock = socket.socket(ipfamily, socket.SOCK_STREAM)
     sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     sock.settimeout(Opts.timeout)
     conn = SSL.Connection(ctx, sock=sock)
@@ -275,14 +328,14 @@ def print_verbose_cert(cert, ip, host, gotError=False):
     return
 
 
-def check_tls(ipaddr, hostname, ctx, certdb):
+def check_tls(ipaddr, ipfamily, hostname, ctx, certdb):
     """perform details of TLS connection and certificate inspection"""
 
     ### print("DEBUG: check_tls(): ip={}, hostname={}".format(ipaddr, hostname))
 
     gotError = False
     Stats.total_cnt += 1
-    conn = get_ssl_connection(ctx)
+    conn = get_ssl_connection(ctx, ipfamily)
 
     try:
         conn.connect((ipaddr, Opts.port))
@@ -321,22 +374,23 @@ def check_tls(ipaddr, hostname, ctx, certdb):
 
 
 if __name__ == '__main__':
-          
-    ipargs = process_args(sys.argv[1:])
+
+    args = process_args(sys.argv[1:])
     certdb = CertDB()
     ctx = get_ssl_context()
 
-    for ipaddr in get_iplist_iterator(ipargs):
+    for ip_or_host in get_iplist_iterator(args):
         if Opts.infile:
-            ipaddr = ipaddr.rstrip('\n')
-        hostname = get_hostname(ipaddr)
-        try:
-            check_tls(ipaddr, hostname, ctx, certdb)
-        except socket.timeout as e:
-            if not Opts.silent:
-                print("ERROR: connection timed out: {} {} {}".format(
-                    ipaddr, hostname, e))
-            Stats.error += 1
+            ip_or_host = ip_or_host.rstrip('\n')
+        serverlist = getServers(ip_or_host)
+        for server in serverlist:
+            try:
+                check_tls(server.ip, server.family, server.host, ctx, certdb)
+            except socket.timeout as e:
+                if not Opts.silent:
+                    print("ERROR: connection timed out: {} {} {}".format(
+                        server.ip, server.host, e))
+                Stats.error += 1
 
     ctx.close()
     if Opts.summary:

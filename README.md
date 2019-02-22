@@ -10,7 +10,7 @@ configuration.
 
 
 Pre-requisites:
-* Python 2 or Python 3
+* Python 3
 * OpenSSL
 * M2Crypto module (Python interface to OpenSSL)
   (I recommend version 0.29 or later that includes the set1_host()
@@ -20,7 +20,7 @@ Usage and options:
 
 ```
 $ tlscertcheck.py --help
-Usage: tlscertcheck.py [Options] <ipaddr1> <ipaddr2> ...
+Usage: tlscertcheck.py [Options] <host1> <host2> ...
 
     Options:
     --help            Print this help message
@@ -37,6 +37,7 @@ Usage: tlscertcheck.py [Options] <ipaddr1> <ipaddr2> ...
     --summary         Print summary at the end
 ```
 
+The host1, host2 etc arguments can either be IP addresses or hostnames.
 The main output format is the following, one line per server IP address:
 
 ```
@@ -49,8 +50,10 @@ easy way to inspect whether all of the servers have the same certificate.
 The "--usefp" option can be specified to alternatively use the SHA1
 fingerprint of the DER-encoding of the full certificate as the certid.
 
-The "hostname" is the name returned by reverse DNS lookup (PTR record)
-of the IP address.
+For an IP address argument, the "hostname" is the name returned by reverse
+DNS lookup (PTR record) of the IP address. For a hostname argument, the
+program resolves all IPv4 or IPv6 addresses of the hostname and checks each
+one.
 
 The "--match" option can be used to specify a certid that all the
 server certificates are compared to. An error message is printed for
