@@ -66,7 +66,7 @@ Usage: {} [Options] <host1> <host2> ...
     --help            Print this help message
     --verbose         Verbose mode; print details of certificate
     --silent          No output, just set response code
-    --sni=<name>      Set SNI extension to given server name
+    --sni=<name>      For IP address arguments, set SNI extension to given name
     --match=<id>      Check that certficates match given id
     --usefp           Use SHA1 fingerprint of DER-encoded cert as id
     --timeout=N       Timeout per connection in seconds (default: {})
@@ -173,10 +173,11 @@ class Server:
     address family and hostname.
     """
 
-    def __init__(self, ip=None, family=None, host=None):
+    def __init__(self, ip=None, family=None, host=None, sni=None):
         self.ip = ip
         self.family = family
         self.host = host
+        self.sni = sni
 
     def __str__(self):
         return "<Server>: {} {} {}".format(self.ip, self.family, self.host)
@@ -210,7 +211,7 @@ def getServers(arg):
     else:
         for family, stype, proto, canonname, sockaddr in ai_list:
             ip = sockaddr[0]
-            slist.append(Server(ip=ip, family=family, host=arg))
+            slist.append(Server(ip=ip, family=family, host=arg, sni=arg))
 
     return slist
 
@@ -253,17 +254,21 @@ def get_ssl_context():
     return ctx
 
 
-def get_ssl_connection(ctx, ipfamily):
+def get_ssl_connection(ctx, server):
     """return SSL connection object"""
-    sock = socket.socket(ipfamily, socket.SOCK_STREAM)
+    sock = socket.socket(server.family, socket.SOCK_STREAM)
     sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     sock.settimeout(Opts.timeout)
     conn = SSL.Connection(ctx, sock=sock)
-    if Opts.sni:
+    if server.sni:
+        sni = server.sni
+    else:
+        sni = Opts.sni
+    if sni:
         if m2have.set_tlsext_host_name:
-            conn.set_tlsext_host_name(Opts.sni)
+            conn.set_tlsext_host_name(sni)
         if m2have.set1_host:
-            conn.set1_host(Opts.sni)
+            conn.set1_host(sni)
     return conn
 
 
@@ -295,7 +300,7 @@ def summary(certdb):
     print("\n## SUMMARY:")
     if Opts.matchid:
         print("## CertId to match: {}".format(Opts.matchid))
-    print("## Number of servers: {}".format(Stats.total_cnt)),
+    print("## Number of servers: {} ".format(Stats.total_cnt), end='')
     if Opts.matchid:
         print("(match {}, nomatch {}, error {})".format(
             Stats.match_ok, Stats.match_fail, Stats.error))
@@ -341,25 +346,26 @@ def print_verbose_cert(cert, ip, host, gotError=False):
     return
 
 
-def check_tls(ipaddr, ipfamily, hostname, ctx, certdb):
+def check_tls(server, ctx, certdb):
     """perform details of TLS connection and certificate inspection"""
 
     ### print("DEBUG: check_tls(): ip={}, hostname={}".format(ipaddr, hostname))
 
     gotError = False
     Stats.total_cnt += 1
-    conn = get_ssl_connection(ctx, ipfamily)
+    conn = get_ssl_connection(ctx, server)
 
     try:
-        conn.connect((ipaddr, Opts.port))
+        conn.connect((server.ip, Opts.port))
     except SSL.SSLError as e:
         if not Opts.silent:
-            print("ERROR: TLS error {} {}: {}\n".format(ipaddr, hostname, e))
+            print("ERROR: TLS error {} {}: {}\n".format(
+                server.ip, server.host, e))
         Stats.error += 1
         return
     except SSL.Checker.WrongHost:
         # Ignore name mismatch unless SNI was specified
-        if Opts.sni:
+        if server.sni or Opts.sni:
             print("ERROR: Certificate name mismatch")
             Stats.error += 1
 
@@ -367,20 +373,21 @@ def check_tls(ipaddr, ipfamily, hostname, ctx, certdb):
 
     cert = conn.get_peer_cert()
     certid = get_certid(cert)
-    certdb.insert(certid, cert, ipaddr)
+    certdb.insert(certid, cert, server.ip)
 
     if not Opts.silent and not Opts.onlyerror:
-        print("{}\t{} {}".format(certid, ipaddr, hostname))
+        print("{}\t{} {}".format(certid, server.ip, server.host))
 
     if Opts.matchid and (certid != Opts.matchid):
         gotError = True
         Stats.match_fail += 1
         if not Opts.silent:
-            print("ERROR: {} {} certid match failed".format(ipaddr, hostname))
+            print("ERROR: {} {} certid match failed".format(
+                server.ip, server.host))
     else:
         Stats.match_ok += 1
 
-    print_verbose_cert(cert, ipaddr, hostname, gotError)
+    print_verbose_cert(cert, server.ip, server.host, gotError)
 
     conn.close()
     return
@@ -400,7 +407,7 @@ if __name__ == '__main__':
         serverlist = getServers(ip_or_host)
         for server in serverlist:
             try:
-                check_tls(server.ip, server.family, server.host, ctx, certdb)
+                check_tls(server, ctx, certdb)
             except socket.timeout as e:
                 if not Opts.silent:
                     print("ERROR: connection timed out: {} {} {}".format(

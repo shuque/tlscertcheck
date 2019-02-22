@@ -26,7 +26,7 @@ Usage: tlscertcheck.py [Options] <host1> <host2> ...
     --help            Print this help message
     --verbose         Verbose mode; print details of certificate
     --silent          No output, just set response code
-    --sni=<name>      Set SNI extension to given name
+    --sni=<name>      For IP address arguments, set SNI extension to given name
     --match=<id>      Check that certficates match given id
     --usefp           Use SHA1 fingerprint of DER-encoded cert as id
     --timeout=N       Timeout per connection in seconds (default: 10.0)
