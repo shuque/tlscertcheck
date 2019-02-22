@@ -25,6 +25,7 @@ Usage: tlscertcheck.py [Options] <host1> <host2> ...
     Options:
     --help            Print this help message
     --verbose         Verbose mode; print details of certificate
+    --printchain      Print full certificate chain if verbose is specified
     --silent          No output, just set response code
     --sni=<name>      For IP address arguments, set SNI extension to given name
     --match=<id>      Check that certficates match given id
@@ -68,6 +69,9 @@ line.
 The "--verbose" option will print more verbose info about each certificate,
 such as: serial number, issuer, subject, SAN dNSNames, inception and
 expiration times.
+
+The "--printchain" option (when specified with --verbose) will also print
+the details of the full certificate chain.
 
 The "--cacert" option can be used to specify a file containing root
 certification authorities to trust (as a sequence of PEM format CA

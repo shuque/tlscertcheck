@@ -14,6 +14,7 @@ class Opts:
     """Options class with initialized defaults"""
     port = 443
     verbose = False
+    printchain = False
     sni = None
     matchid = None
     usefp = False
@@ -65,6 +66,7 @@ Usage: {} [Options] <host1> <host2> ...
     Options:
     --help            Print this help message
     --verbose         Verbose mode; print details of certificate
+    --printchain      Print full certificate chain if verbose is specified
     --silent          No output, just set response code
     --sni=<name>      For IP address arguments, set SNI extension to given name
     --match=<id>      Check that certficates match given id
@@ -86,6 +88,7 @@ def process_args(arguments):
     longopts = [
         "help",
         "verbose",
+        "printchain",
         "silent",
         "sni=",
         "match=",
@@ -106,6 +109,8 @@ def process_args(arguments):
     for (opt, optval) in options:
         if opt == "--verbose":
             Opts.verbose = True
+        if opt == "--printchain":
+            Opts.printchain = True
         elif opt == "--help":
             usage()
         elif opt == "--silent":
@@ -133,6 +138,9 @@ def process_args(arguments):
 
     if Opts.verbose and Opts.silent:
         usage("Error: contradictory options specified: --verbose and --silent")
+
+    if Opts.printchain and not Opts.verbose:
+        usage("Error: --printchain requires --verbose option")
 
     if Opts.infile and args:
         usage("Error: With --infile no IP/hosts are specified on command line")
@@ -321,8 +329,25 @@ def return_code():
         return 0
 
 
-def print_verbose_cert(cert, ip, host, gotError=False):
+def print_cert(cert, server, gotError=False):
     """Print details of certificate, if verbose option specified"""
+
+    serial = cert.get_serial_number()
+    issuer = cert.get_issuer()
+    subject = cert.get_subject()
+
+    print("## Serial    : %x" % serial)
+    print("## Issuer    : %s" % issuer.as_text())
+    print("## Subject   : %s" % subject.as_text())
+    print("## SAN DNS   : %s" % " ".join(get_san_dns(cert)))
+    print("## Inception : %s" % cert_inception(cert))
+    print("## Expiration: %s" % cert_expiration(cert))
+
+    return
+
+
+def print_cert_chain(chain, server, gotError=False):
+    """Print details of certificate(s), if verbose option specified"""
 
     if not Opts.verbose:
         return
@@ -330,19 +355,17 @@ def print_verbose_cert(cert, ip, host, gotError=False):
     if Opts.onlyerror and (not gotError):
         return
 
-    serial = cert.get_serial_number()
-    issuer = cert.get_issuer()
-    subject = cert.get_subject()
+    print("## Host {} address {}".format(server.host, server.ip))
 
-    print("## Host {} address {}".format(host, ip))
-    print("## Serial    : %x" % serial)
-    print("## Issuer    : %s" % issuer.as_text())
-    print("## Subject   : %s" % subject.as_text())
-    print("## SAN DNS   : %s" % " ".join(get_san_dns(cert)))
-    print("## Inception : %s" % cert_inception(cert))
-    print("## Expiration: %s" % cert_expiration(cert))
+    if Opts.printchain:
+        for (i, cert) in enumerate(chain):
+            print('## ----------- Certificate at Depth={}:'.format(i))
+            print_cert(cert, server, gotError)
+    else:
+        ee_cert = chain[0]
+        print_cert(ee_cert, server, gotError)
+
     print('')
-
     return
 
 
@@ -371,7 +394,8 @@ def check_tls(server, ctx, certdb):
 
     Stats.ok += 1
 
-    cert = conn.get_peer_cert()
+    chain = conn.get_peer_cert_chain()
+    cert = chain[0]
     certid = get_certid(cert)
     certdb.insert(certid, cert, server.ip)
 
@@ -387,7 +411,7 @@ def check_tls(server, ctx, certdb):
     else:
         Stats.match_ok += 1
 
-    print_verbose_cert(cert, server.ip, server.host, gotError)
+    print_cert_chain(chain, server, gotError)
 
     conn.close()
     return
