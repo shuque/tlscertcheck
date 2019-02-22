@@ -24,7 +24,7 @@ class Opts:
     onlyerror = False
     summary = False
     timeout = 10.0
-    nowarn = False
+    m2warn = False
 
 
 class Stats:
@@ -34,6 +34,25 @@ class Stats:
     match_fail = 0
     ok = 0
     error = 0
+
+
+class M2HaveFuncs:
+    """Class to record if we have certain SSL module functions"""
+    set_tlsext_host_name = True
+    set1_host = True
+    def __init__(self):
+        try:
+            SSL.Connection.set_tlsext_host_name
+        except AttributeError:
+            self.set_tlsext_host_name = False
+            if Opts.m2warn:
+                print("WARNING: M2Crypto missing set_tlsext_host_name()")
+        try:
+            SSL.Connection.set1_host
+        except AttributeError:
+            self.set1_host = False
+            if Opts.m2warn:
+                print("WARNING: M2Crypto missing set1_host()")
 
 
 def usage(msg=None):
@@ -56,7 +75,7 @@ Usage: {} [Options] <host1> <host2> ...
     --noverify        Don't perform certificate verification
     --onlyerror       Only print errors for each server
     --summary         Print summary at the end
-    --nowarn          Don't print warnings for missing TLS functions
+    --m2warn          Print warning if missing M2Crypto library features
 """.format(os.path.basename(sys.argv[0]), Opts.timeout))
     sys.exit(1)
 
@@ -109,8 +128,8 @@ def process_args(arguments):
             Opts.onlyerror = True
         elif opt == "--summary":
             Opts.summary = True
-        elif opt == "--nowarn":
-            Opts.nowarn = True
+        elif opt == "--m2warn":
+            Opts.m2warn = True
 
     if Opts.verbose and Opts.silent:
         usage("Error: contradictory options specified: --verbose and --silent")
@@ -241,16 +260,10 @@ def get_ssl_connection(ctx, ipfamily):
     sock.settimeout(Opts.timeout)
     conn = SSL.Connection(ctx, sock=sock)
     if Opts.sni:
-        try:
+        if m2have.set_tlsext_host_name:
             conn.set_tlsext_host_name(Opts.sni)
-        except AttributeError:
-            if not Opts.nowarn:
-                print("DEBUG: warning: set_tlsext_host_name() not found")
-        try:
+        if m2have.set1_host:
             conn.set1_host(Opts.sni)
-        except AttributeError:
-            if not Opts.nowarn:
-                print("DEBUG: warning: set1_host() not found")
     return conn
 
 
@@ -377,6 +390,8 @@ if __name__ == '__main__':
 
     args = process_args(sys.argv[1:])
     certdb = CertDB()
+
+    m2have = M2HaveFuncs()
     ctx = get_ssl_context()
 
     for ip_or_host in get_iplist_iterator(args):

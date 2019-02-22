@@ -35,6 +35,7 @@ Usage: tlscertcheck.py [Options] <host1> <host2> ...
     --noverify        Don't perform certificate verification
     --onlyerror       Only print errors for each server
     --summary         Print summary at the end
+    --m2warn          Print warning if missing M2Crypto library features
 ```
 
 The host1, host2 etc arguments can either be IP addresses or hostnames.
