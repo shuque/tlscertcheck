@@ -60,6 +60,48 @@ class M2HaveFuncs:
                 print("WARNING: M2Crypto missing set1_host()")
 
 
+# from OpenSSL openssl/x509_vfy.h header file. M2Crypto doesn't appear to
+# export them.
+X509_VERIFY_RESULT = {
+    0: "Ok",
+    1: "Unspecified error",
+    2: "Unable to get local issuer cert",
+    3: "Unable to get CRL",
+    4: "Unable to decrypt cert signature",
+    5: "Unable to decrypt CRL signature",
+    6: "Unable to decode issuer public key",
+    7: "Cert signature failure",
+    8: "CRL signature failure",
+    9: "Cert not yet valid",
+    10: "Cert has expired",
+    11: "CRL not yet valid",
+    12: "CRL has expired",
+    13: "Error in CERT_NOT_BEFORE field",
+    14: "Error in CERT_NOT_AFTER field",
+    15: "Error in CRL_LAST_UPDATE field",
+    16: "Error in CRL_NEXT_UPDATE field",
+    17: "Out of memory",
+    18: "Self Signed certificate",
+    19: "Self Signed certificate in chain",
+    20: "Unable to get issuer cert locally",
+    21: "Unable to verify leaf signature",
+    22: "Certificate chain too long",
+    23: "Certificate revoked",
+    24: "Invalid CA",
+    25: "Path Length exceeded",
+    26: "Invalid Purpose",
+    27: "Certificate untrusted",
+    28: "Certificate rejected",
+}
+
+
+def verify_result_string(code):
+    """Return text string for verify_result() code"""
+    if code in X509_VERIFY_RESULT:
+        return X509_VERIFY_RESULT[code]
+    return "Unknown error code: {}".format(code)
+
+
 def usage(msg=None):
     """Print usage string with optional error message, then exit"""
     if msg:
@@ -414,8 +456,10 @@ def check_tls(server, ctx, certdb):
         conn.connect((server.ip, Opts.port))
     except SSL.SSLError as e:
         if not Opts.silent and not Opts.onlyerror:
-            print("ERROR: TLS error {}: {} {}\n".format(
-                e, server.ip, server.host))
+            print("ERROR: TLS {}: {}: {} {}".format(
+                e,
+                verify_result_string(conn.get_verify_result()),
+                server.ip, server.host))
         Stats.error += 1
         return
     except SSL.Checker.WrongHost:
@@ -426,9 +470,13 @@ def check_tls(server, ctx, certdb):
                     server.ip, server.host))
             Stats.error += 1
 
-    Stats.ok += 1
+    if not gotError:
+        Stats.ok += 1
 
     chain = conn.get_peer_cert_chain()
+    if chain is None:
+        return
+
     cert = chain[0]
     certid = get_certid(cert)
     certdb.insert(certid, cert, server.ip)
