@@ -181,3 +181,24 @@ e8e7fa116fb7d651:f131ccf4       104.20.0.85 www.ietf.org
 ## Inception : 2018-06-12 15:44:12+00:00 UTC
 ## Expiration: 2019-08-11 23:12:50+00:00 UTC
 ```
+
+```
+$ tlscertcheck.py expired.badssl.com
+ERROR: TLS certificate verify failed: Cert has expired: 104.154.89.105 expired.badssl.com
+```
+
+```
+$ tlscertcheck.py self-signed.badssl.com
+ERROR: TLS certificate verify failed: Self Signed certificate: 104.154.89.105 self-signed.badssl.com
+```
+
+```
+$ tlscertcheck.py untrusted-root.badssl.com
+ERROR: TLS certificate verify failed: Unable to get issuer cert locally: 104.154.89.105 untrusted-root.badssl.com
+```
+
+```
+$ tlscertcheck.py wrong.host.badssl.com
+ERROR: Certificate name mismatch: 104.154.89.105 wrong.host.badssl.com
+1f202031dfda98efdff0f72be51060d:4bcd7fc4        104.154.89.105 wrong.host.badssl.com
+```
