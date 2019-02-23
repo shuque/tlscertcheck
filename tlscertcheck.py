@@ -194,7 +194,11 @@ class Server:
 def getServers(arg):
 
     """
-    Return a list of Server objects for each IP/host
+    Return a list of Server objects for given IP address or hostname
+    argument. There is one Server object per IP address. So if 'arg'
+    is an IP address, we return a list with one Server object. If 'arg'
+    is a hostname, we enumerate all its addresses, and return a list of
+    Server objects corresponding to each address.
     """
 
     try:
@@ -225,6 +229,12 @@ def getServers(arg):
 
 
 def get_iplist_iterator(args):
+
+    """
+    Return an iterator for all IP/host targets, whether they are specified
+    on the command line or in an input file.
+    """
+
     if args:
         return iter(args)
     elif Opts.infile:
@@ -234,6 +244,12 @@ def get_iplist_iterator(args):
 
 
 def get_hostname(ip):
+
+    """
+    Return the hostname associated with a reverse (PTR) lookup of the
+    given IP address. Return "NO_HOSTNAME" if no reverse DNS exists.
+    """
+
     try:
         hostname = socket.gethostbyaddr(ip)[0]
     except socket.herror:
@@ -241,25 +257,13 @@ def get_hostname(ip):
     return hostname
 
 
-def get_san_dns(cert):
-    """return list of Subject Alt Name dNSName strings from certificate"""
-    sandnslist = []
-    try:
-        san = cert.get_ext('subjectAltName').get_value()
-        sandnslist = [y.lstrip('DNS:') for y in san.split(', ')
-                      if y.startswith('DNS:')]
-    except LookupError:
-        pass
-    return sandnslist
-
-
 def get_ssl_context():
     """return SSL context object"""
-    ctx = SSL.Context()
+    context = SSL.Context()
     if not Opts.noverify:
-        ctx.load_verify_locations(cafile=Opts.cacert)
-        ctx.set_verify(SSL.verify_peer, 10)
-    return ctx
+        context.load_verify_locations(cafile=Opts.cacert)
+        context.set_verify(SSL.verify_peer, 10)
+    return context
 
 
 def get_ssl_connection(ctx, server):
@@ -268,10 +272,7 @@ def get_ssl_connection(ctx, server):
     sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     sock.settimeout(Opts.timeout)
     conn = SSL.Connection(ctx, sock=sock)
-    if server.sni:
-        sni = server.sni
-    else:
-        sni = Opts.sni
+    sni = server.sni if server.sni else Opts.sni
     if sni:
         if m2have.set_tlsext_host_name:
             conn.set_tlsext_host_name(sni)
@@ -329,7 +330,23 @@ def return_code():
         return 0
 
 
-def print_cert(cert, server, gotError=False):
+def print_subjectaltnames(cert):
+
+    """
+    Print Subject Alternative Names in the certificate.
+    """
+
+    try:
+        sanlist = cert.get_ext('subjectAltName').get_value()
+    except LookupError:
+        return
+    else:
+        for san in sanlist.split(', '):
+            print("## SAN: {}".format(san))
+        return
+
+
+def print_cert(cert):
     """Print details of certificate, if verbose option specified"""
 
     serial = cert.get_serial_number()
@@ -339,7 +356,7 @@ def print_cert(cert, server, gotError=False):
     print("## Serial    : %x" % serial)
     print("## Issuer    : %s" % issuer.as_text())
     print("## Subject   : %s" % subject.as_text())
-    print("## SAN DNS   : %s" % " ".join(get_san_dns(cert)))
+    print_subjectaltnames(cert)
     print("## Inception : %s" % cert_inception(cert))
     print("## Expiration: %s" % cert_expiration(cert))
 
@@ -360,10 +377,9 @@ def print_cert_chain(chain, server, gotError=False):
     if Opts.printchain:
         for (i, cert) in enumerate(chain):
             print('## ----------- Certificate at Depth={}:'.format(i))
-            print_cert(cert, server, gotError)
+            print_cert(cert)
     else:
-        ee_cert = chain[0]
-        print_cert(ee_cert, server, gotError)
+        print_cert(chain[0])
 
     print('')
     return
@@ -371,8 +387,6 @@ def print_cert_chain(chain, server, gotError=False):
 
 def check_tls(server, ctx, certdb):
     """perform details of TLS connection and certificate inspection"""
-
-    ### print("DEBUG: check_tls(): ip={}, hostname={}".format(ipaddr, hostname))
 
     gotError = False
     Stats.total_cnt += 1
@@ -387,7 +401,6 @@ def check_tls(server, ctx, certdb):
         Stats.error += 1
         return
     except SSL.Checker.WrongHost:
-        # Ignore name mismatch unless SNI was specified
         if server.sni or Opts.sni:
             print("ERROR: Certificate name mismatch")
             Stats.error += 1
