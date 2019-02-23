@@ -61,24 +61,25 @@ def usage(msg=None):
     if msg:
         print("{}\n".format(msg))
     print("""\
-Usage: {} [Options] <host1> <host2> ...
+Usage: {0} [Options] <host1> <host2> ...
 
     Options:
     --help            Print this help message
     --verbose         Verbose mode; print details of certificate
     --printchain      Print full certificate chain if verbose is specified
     --silent          No output, just set response code
+    --port=N          Use specified port (default: {1})
     --sni=<name>      For IP address arguments, set SNI extension to given name
     --match=<id>      Check that certficates match given id
     --usefp           Use SHA1 fingerprint of DER-encoded cert as id
-    --timeout=N       Timeout per connection in seconds (default: {})
+    --timeout=N       Timeout per connection in seconds (default: {2})
     --infile=<file>   Read server addresses from given file
     --cacert=<file>   Use given file for trusted root CAs (PEM format)
     --noverify        Don't perform certificate verification
     --onlyerror       Only print errors for each server
     --summary         Print summary at the end
     --m2warn          Print warning if missing M2Crypto library features
-""".format(os.path.basename(sys.argv[0]), Opts.timeout))
+""".format(os.path.basename(sys.argv[0]), Opts.port, Opts.timeout))
     sys.exit(1)
 
 
@@ -90,6 +91,7 @@ def process_args(arguments):
         "verbose",
         "printchain",
         "silent",
+        "port=",
         "sni=",
         "match=",
         "usefp",
@@ -115,6 +117,8 @@ def process_args(arguments):
             usage()
         elif opt == "--silent":
             Opts.silent = True
+        elif opt == "--port":
+            Opts.port = int(optval)
         elif opt == "--sni":
             Opts.sni = optval
         elif opt == "--match":
@@ -448,6 +452,11 @@ if __name__ == '__main__':
             except socket.timeout as e:
                 if not Opts.silent:
                     print("ERROR: connection timed out: {} {} {}".format(
+                        server.ip, server.host, e))
+                Stats.error += 1
+            except Exception as e:
+                if not Opts.silent:
+                    print("ERROR: {} {}: {}".format(
                         server.ip, server.host, e))
                 Stats.error += 1
 
