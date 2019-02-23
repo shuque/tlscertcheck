@@ -4,9 +4,13 @@
 """
 tlscertcheck.py: TLS certificate checking tool.
 
+Author: Shumon Huque <shuque@gmail.com>
 """
 
-import os.path, sys, getopt, socket
+import os.path
+import sys
+import getopt
+import socket
 from M2Crypto import SSL
 
 
@@ -174,7 +178,7 @@ class CertDB:
     def printSummary(self):
         print("## Number of distinct certs seen: {}".format(len(self.db)))
         for certid, val in self.db.items():
-            cert, iplist = val
+            _, iplist = val
             print("## [{}] {} {}".format(len(iplist), certid, ','.join(iplist)))
 
 
@@ -367,16 +371,8 @@ def print_cert(cert):
     return
 
 
-def print_cert_chain(chain, server, gotError=False):
+def print_cert_chain(chain, server):
     """Print details of certificate(s), if verbose option specified"""
-
-    if not Opts.verbose:
-        return
-
-    if Opts.onlyerror and (not gotError):
-        return
-
-    print("## Host {} address {}".format(server.host, server.ip))
 
     if Opts.printchain:
         for (i, cert) in enumerate(chain):
@@ -389,8 +385,26 @@ def print_cert_chain(chain, server, gotError=False):
     return
 
 
+def print_tls_info(conn):
+    """Print TLS version and cipher-suite"""
+    print('## TLS: {} {}'.format(
+        conn.get_version(), conn.get_cipher()))
+
+
+def print_connection_details(server, connection, chain, gotError=False):
+    """Print TLS connection and certificate details"""
+
+    if Opts.onlyerror and (not gotError):
+        return
+
+    print("## Host {} address {}".format(server.host, server.ip))
+    print_tls_info(connection)
+    print_cert_chain(chain, server)
+    return
+
+
 def check_tls(server, ctx, certdb):
-    """perform details of TLS connection and certificate inspection"""
+    """Connect to server with TLS, print connection and certificate details"""
 
     gotError = False
     Stats.total_cnt += 1
@@ -399,14 +413,17 @@ def check_tls(server, ctx, certdb):
     try:
         conn.connect((server.ip, Opts.port))
     except SSL.SSLError as e:
-        if not Opts.silent:
-            print("ERROR: TLS error {} {}: {}\n".format(
-                server.ip, server.host, e))
+        if not Opts.silent and not Opts.onlyerror:
+            print("ERROR: TLS error {}: {} {}\n".format(
+                e, server.ip, server.host))
         Stats.error += 1
         return
     except SSL.Checker.WrongHost:
         if server.sni or Opts.sni:
-            print("ERROR: Certificate name mismatch")
+            gotError = True
+            if not Opts.silent and not Opts.onlyerror:
+                print("ERROR: Certificate name mismatch: {} {}".format(
+                    server.ip, server.host))
             Stats.error += 1
 
     Stats.ok += 1
@@ -423,12 +440,13 @@ def check_tls(server, ctx, certdb):
         gotError = True
         Stats.match_fail += 1
         if not Opts.silent:
-            print("ERROR: {} {} certid match failed".format(
+            print("ERROR: certificate match failed: {} {}".format(
                 server.ip, server.host))
     else:
         Stats.match_ok += 1
 
-    print_cert_chain(chain, server, gotError)
+    if Opts.verbose:
+        print_connection_details(server, conn, chain, gotError=gotError)
 
     conn.close()
     return
