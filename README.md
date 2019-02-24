@@ -133,21 +133,24 @@ $ tlscertcheck.py --verbose --printchain 1.1.1.1
 ## Subject   : C=US, O=DigiCert Inc, CN=DigiCert ECC Secure Server CA
 ## Inception : 2013-03-08 12:00:00+00:00 UTC
 ## Expiration: 2023-03-08 12:00:00+00:00 UTC
+## AKI: keyid:A3:9D:E6:1F:F9:DA:39:4F:C0:6E:E8:91:CB:95:A5:DA:31:E2:0A:9F
+## SKI: 70:95:DC:5C:A3:8E:66:07:DB:CB:81:10:C6:AB:E7:C3:A8:45:7F:A0
+## keyUsage: Digital Signature
+## extendedKeyUsage: TLS Web Server Authentication, TLS Web Client Authentication
+## crlDistributionPoints: <present>
+## Policy: 2.16.840.1.114412.1.1
+## Policy: CPS: https://www.digicert.com/CPS
+## Policy: 2.23.140.1.2.2
+## AuthorityInfoAcces: OCSP - URI:http://ocsp.digicert.com
+## AuthorityInfoAcces: CA Issuers - URI:http://cacerts.digicert.com/DigiCertECCSecureServerCA.crt
+## authorityInfoAccess: OCSP - URI:http://ocsp.digicert.com
+CA Issuers - URI:http://cacerts.digicert.com/DigiCertECCSecureServerCA.crt
+## basicConstraints: CA:FALSE
+## ct_precert_scts: <present>
 ```
 
 ```
 $ tlscertcheck.py --verbose www.ietf.org
-e8e7fa116fb7d651:f131ccf4       2606:4700:10::6814:155 www.ietf.org
-## Host www.ietf.org address 2606:4700:10::6814:155
-## TLS: TLSv1.2 ECDHE-RSA-CHACHA20-POLY1305-256
-## Serial    : e8e7fa116fb7d651
-## Issuer    : C=US, ST=Arizona, L=Scottsdale, O=Starfield Technologies, Inc., OU=http://certs.starfieldtech.com/repository/, CN=Starfield Secure Certificate Authority - G2
-## Subject   : OU=Domain Control Validated, CN=*.ietf.org
-## SAN: DNS:*.ietf.org
-## SAN: DNS:ietf.org
-## Inception : 2018-06-12 15:44:12+00:00 UTC
-## Expiration: 2019-08-11 23:12:50+00:00 UTC
-
 e8e7fa116fb7d651:f131ccf4       2606:4700:10::6814:55 www.ietf.org
 ## Host www.ietf.org address 2606:4700:10::6814:55
 ## TLS: TLSv1.2 ECDHE-RSA-CHACHA20-POLY1305-256
@@ -158,9 +161,23 @@ e8e7fa116fb7d651:f131ccf4       2606:4700:10::6814:55 www.ietf.org
 ## SAN: DNS:ietf.org
 ## Inception : 2018-06-12 15:44:12+00:00 UTC
 ## Expiration: 2019-08-11 23:12:50+00:00 UTC
+## basicConstraints: CA:FALSE
+## extendedKeyUsage: TLS Web Server Authentication, TLS Web Client Authentication
+## keyUsage: Digital Signature, Key Encipherment
+## crlDistributionPoints: <present>
+## Policy: 2.16.840.1.114414.1.7.23.1
+## Policy: CPS: http://certificates.starfieldtech.com/repository/
+## Policy: 2.23.140.1.2.1
+## AuthorityInfoAcces: OCSP - URI:http://ocsp.starfieldtech.com/
+## AuthorityInfoAcces: CA Issuers - URI:http://certificates.starfieldtech.com/repository/sfig2.crt
+## authorityInfoAccess: OCSP - URI:http://ocsp.starfieldtech.com/
+CA Issuers - URI:http://certificates.starfieldtech.com/repository/sfig2.crt
+## AKI: keyid:25:45:81:68:50:26:38:3D:3B:2D:2C:BE:CD:6A:D9:B6:3D:B3:66:63
+## SKI: 06:FE:0B:AB:D8:E6:74:6E:FC:C4:73:02:85:F7:A9:48:7E:D1:34:4F
+## ct_precert_scts: <present>
 
-e8e7fa116fb7d651:f131ccf4       104.20.1.85 www.ietf.org
-## Host www.ietf.org address 104.20.1.85
+e8e7fa116fb7d651:f131ccf4       2606:4700:10::6814:155 www.ietf.org
+## Host www.ietf.org address 2606:4700:10::6814:155
 ## TLS: TLSv1.2 ECDHE-RSA-CHACHA20-POLY1305-256
 ## Serial    : e8e7fa116fb7d651
 ## Issuer    : C=US, ST=Arizona, L=Scottsdale, O=Starfield Technologies, Inc., OU=http://certs.starfieldtech.com/repository/, CN=Starfield Secure Certificate Authority - G2
@@ -169,6 +186,20 @@ e8e7fa116fb7d651:f131ccf4       104.20.1.85 www.ietf.org
 ## SAN: DNS:ietf.org
 ## Inception : 2018-06-12 15:44:12+00:00 UTC
 ## Expiration: 2019-08-11 23:12:50+00:00 UTC
+## basicConstraints: CA:FALSE
+## extendedKeyUsage: TLS Web Server Authentication, TLS Web Client Authentication
+## keyUsage: Digital Signature, Key Encipherment
+## crlDistributionPoints: <present>
+## Policy: 2.16.840.1.114414.1.7.23.1
+## Policy: CPS: http://certificates.starfieldtech.com/repository/
+## Policy: 2.23.140.1.2.1
+## AuthorityInfoAcces: OCSP - URI:http://ocsp.starfieldtech.com/
+## AuthorityInfoAcces: CA Issuers - URI:http://certificates.starfieldtech.com/repository/sfig2.crt
+## authorityInfoAccess: OCSP - URI:http://ocsp.starfieldtech.com/
+CA Issuers - URI:http://certificates.starfieldtech.com/repository/sfig2.crt
+## AKI: keyid:25:45:81:68:50:26:38:3D:3B:2D:2C:BE:CD:6A:D9:B6:3D:B3:66:63
+## SKI: 06:FE:0B:AB:D8:E6:74:6E:FC:C4:73:02:85:F7:A9:48:7E:D1:34:4F
+## ct_precert_scts: <present>
 
 e8e7fa116fb7d651:f131ccf4       104.20.0.85 www.ietf.org
 ## Host www.ietf.org address 104.20.0.85
@@ -180,6 +211,45 @@ e8e7fa116fb7d651:f131ccf4       104.20.0.85 www.ietf.org
 ## SAN: DNS:ietf.org
 ## Inception : 2018-06-12 15:44:12+00:00 UTC
 ## Expiration: 2019-08-11 23:12:50+00:00 UTC
+## basicConstraints: CA:FALSE
+## extendedKeyUsage: TLS Web Server Authentication, TLS Web Client Authentication
+## keyUsage: Digital Signature, Key Encipherment
+## crlDistributionPoints: <present>
+## Policy: 2.16.840.1.114414.1.7.23.1
+## Policy: CPS: http://certificates.starfieldtech.com/repository/
+## Policy: 2.23.140.1.2.1
+## AuthorityInfoAcces: OCSP - URI:http://ocsp.starfieldtech.com/
+## AuthorityInfoAcces: CA Issuers - URI:http://certificates.starfieldtech.com/repository/sfig2.crt
+## authorityInfoAccess: OCSP - URI:http://ocsp.starfieldtech.com/
+CA Issuers - URI:http://certificates.starfieldtech.com/repository/sfig2.crt
+## AKI: keyid:25:45:81:68:50:26:38:3D:3B:2D:2C:BE:CD:6A:D9:B6:3D:B3:66:63
+## SKI: 06:FE:0B:AB:D8:E6:74:6E:FC:C4:73:02:85:F7:A9:48:7E:D1:34:4F
+## ct_precert_scts: <present>
+
+e8e7fa116fb7d651:f131ccf4       104.20.1.85 www.ietf.org
+## Host www.ietf.org address 104.20.1.85
+## TLS: TLSv1.2 ECDHE-RSA-CHACHA20-POLY1305-256
+## Serial    : e8e7fa116fb7d651
+## Issuer    : C=US, ST=Arizona, L=Scottsdale, O=Starfield Technologies, Inc., OU=http://certs.starfieldtech.com/repository/, CN=Starfield Secure Certificate Authority - G2
+## Subject   : OU=Domain Control Validated, CN=*.ietf.org
+## SAN: DNS:*.ietf.org
+## SAN: DNS:ietf.org
+## Inception : 2018-06-12 15:44:12+00:00 UTC
+## Expiration: 2019-08-11 23:12:50+00:00 UTC
+## basicConstraints: CA:FALSE
+## extendedKeyUsage: TLS Web Server Authentication, TLS Web Client Authentication
+## keyUsage: Digital Signature, Key Encipherment
+## crlDistributionPoints: <present>
+## Policy: 2.16.840.1.114414.1.7.23.1
+## Policy: CPS: http://certificates.starfieldtech.com/repository/
+## Policy: 2.23.140.1.2.1
+## AuthorityInfoAcces: OCSP - URI:http://ocsp.starfieldtech.com/
+## AuthorityInfoAcces: CA Issuers - URI:http://certificates.starfieldtech.com/repository/sfig2.crt
+## authorityInfoAccess: OCSP - URI:http://ocsp.starfieldtech.com/
+CA Issuers - URI:http://certificates.starfieldtech.com/repository/sfig2.crt
+## AKI: keyid:25:45:81:68:50:26:38:3D:3B:2D:2C:BE:CD:6A:D9:B6:3D:B3:66:63
+## SKI: 06:FE:0B:AB:D8:E6:74:6E:FC:C4:73:02:85:F7:A9:48:7E:D1:34:4F
+## ct_precert_scts: <present>
 ```
 
 ```

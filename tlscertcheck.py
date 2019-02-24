@@ -396,6 +396,49 @@ def print_subjectaltnames(cert):
         return
 
 
+def print_otherextensions(cert):
+
+    """
+    Print other extensions present in the certificate.
+    """
+
+    for i in range(cert.get_ext_count()):
+        extension = cert.get_ext_at(i)
+        ext_name = extension.get_name()
+        ext_value = extension.get_value()
+        if ext_name == 'subjectAltName':
+            continue                           # Printed elsewhere
+        elif ext_name == 'keyUsage':
+            print('## {}: {}'.format(ext_name, ext_value))
+        elif ext_name == 'extendedKeyUsage':
+            print('## {}: {}'.format(ext_name, ext_value))
+        elif ext_name == 'basicConstraints':
+            print('## {}: {}'.format(ext_name, ext_value))
+        elif ext_name == 'basicConstraints':
+            print('## {}: {}'.format(ext_name, ext_value))
+        elif ext_name == 'subjectKeyIdentifier':
+            print('## SKI: {}'.format(ext_value))
+        elif ext_name == 'authorityKeyIdentifier':
+            ext_value = ext_value.rstrip('\n')
+            print('## AKI: {}'.format(ext_value))
+        elif ext_name == 'authorityInfoAccess':
+            ext_value = ext_value.rstrip('\n')
+            for v in ext_value.split('\n'):
+                print('## AuthorityInfoAcces: {}'.format(v))
+            print('## {}: {}'.format(ext_name, ext_value))
+        elif ext_name == 'certificatePolicies':
+            ext_value = ext_value.rstrip('\n')
+            for v in ext_value.split('\n'):
+                v = v.lstrip(' ')
+                if v.startswith('Policy: '):
+                    v = v[8:]
+                print('## Policy: {}'.format(v))
+        else:
+            print('## {}: <present>'.format(ext_name))
+
+    return
+
+
 def print_cert(cert):
     """Print details of certificate, if verbose option specified"""
 
@@ -409,6 +452,7 @@ def print_cert(cert):
     print_subjectaltnames(cert)
     print("## Inception : %s" % cert_inception(cert))
     print("## Expiration: %s" % cert_expiration(cert))
+    print_otherextensions(cert)
 
     return
 
