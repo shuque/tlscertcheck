@@ -424,8 +424,7 @@ def print_otherextensions(cert):
         elif ext_name == 'authorityInfoAccess':
             ext_value = ext_value.rstrip('\n')
             for v in ext_value.split('\n'):
-                print('## AuthorityInfoAcces: {}'.format(v))
-            print('## {}: {}'.format(ext_name, ext_value))
+                print('## AuthorityInfoAccess: {}'.format(v))
         elif ext_name == 'certificatePolicies':
             ext_value = ext_value.rstrip('\n')
             for v in ext_value.split('\n'):

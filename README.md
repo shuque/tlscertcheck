@@ -127,12 +127,6 @@ $ tlscertcheck.py --verbose --printchain 1.1.1.1
 ## SAN: IP Address:162.159.46.1
 ## Inception : 2019-01-28 00:00:00+00:00 UTC
 ## Expiration: 2021-02-01 12:00:00+00:00 UTC
-## ----------- Certificate at Depth=1:
-## Serial    : acb28ba465ee53908767470f3cdc612
-## Issuer    : C=US, O=DigiCert Inc, OU=www.digicert.com, CN=DigiCert Global Root CA
-## Subject   : C=US, O=DigiCert Inc, CN=DigiCert ECC Secure Server CA
-## Inception : 2013-03-08 12:00:00+00:00 UTC
-## Expiration: 2023-03-08 12:00:00+00:00 UTC
 ## AKI: keyid:A3:9D:E6:1F:F9:DA:39:4F:C0:6E:E8:91:CB:95:A5:DA:31:E2:0A:9F
 ## SKI: 70:95:DC:5C:A3:8E:66:07:DB:CB:81:10:C6:AB:E7:C3:A8:45:7F:A0
 ## keyUsage: Digital Signature
@@ -141,12 +135,24 @@ $ tlscertcheck.py --verbose --printchain 1.1.1.1
 ## Policy: 2.16.840.1.114412.1.1
 ## Policy: CPS: https://www.digicert.com/CPS
 ## Policy: 2.23.140.1.2.2
-## AuthorityInfoAcces: OCSP - URI:http://ocsp.digicert.com
-## AuthorityInfoAcces: CA Issuers - URI:http://cacerts.digicert.com/DigiCertECCSecureServerCA.crt
-## authorityInfoAccess: OCSP - URI:http://ocsp.digicert.com
-CA Issuers - URI:http://cacerts.digicert.com/DigiCertECCSecureServerCA.crt
+## AuthorityInfoAccess: OCSP - URI:http://ocsp.digicert.com
+## AuthorityInfoAccess: CA Issuers - URI:http://cacerts.digicert.com/DigiCertECCSecureServerCA.crt
 ## basicConstraints: CA:FALSE
 ## ct_precert_scts: <present>
+## ----------- Certificate at Depth=1:
+## Serial    : acb28ba465ee53908767470f3cdc612
+## Issuer    : C=US, O=DigiCert Inc, OU=www.digicert.com, CN=DigiCert Global Root CA
+## Subject   : C=US, O=DigiCert Inc, CN=DigiCert ECC Secure Server CA
+## Inception : 2013-03-08 12:00:00+00:00 UTC
+## Expiration: 2023-03-08 12:00:00+00:00 UTC
+## basicConstraints: CA:TRUE, pathlen:0
+## keyUsage: Digital Signature, Certificate Sign, CRL Sign
+## AuthorityInfoAccess: OCSP - URI:http://ocsp.digicert.com
+## crlDistributionPoints: <present>
+## Policy: X509v3 Any Policy
+## Policy: CPS: https://www.digicert.com/CPS
+## SKI: A3:9D:E6:1F:F9:DA:39:4F:C0:6E:E8:91:CB:95:A5:DA:31:E2:0A:9F
+## AKI: keyid:03:DE:50:35:56:D1:4C:BB:66:F0:A3:E2:1B:1B:C3:97:B2:3D:D1:55
 ```
 
 ```
