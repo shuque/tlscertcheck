@@ -278,19 +278,18 @@ def get_servers(arg):
     return slist
 
 
-def get_iplist_iterator(args):
+def get_next_arg(args, infile=None):
 
-    """
-    Return an iterator for all IP/host targets, whether they are specified
-    on the command line or in an input file.
-    """
+    """Generator function that yields the next IP or hostname argument"""
 
     if args:
-        return iter(args)
-    elif Opts.infile:
-        return open(Opts.infile)
+        for arg in args:
+            yield arg
+    elif infile:
+        for line in open(infile, 'r'):
+            yield line.rstrip('\n')
     else:
-        raise Exception("get_iplist_iterator(): value error")
+        raise Exception("")
 
 
 def get_hostname(ip):
@@ -551,11 +550,8 @@ if __name__ == '__main__':
     m2have = M2HaveFuncs()
     ctx = get_ssl_context()
 
-    for ip_or_host in get_iplist_iterator(args):
-        if Opts.infile:
-            ip_or_host = ip_or_host.rstrip('\n')
-        serverlist = get_servers(ip_or_host)
-        for server in serverlist:
+    for ip_or_host in get_next_arg(args, infile=Opts.infile):
+        for server in get_servers(ip_or_host):
             try:
                 check_tls(server, ctx, certdb)
             except socket.timeout as e:
