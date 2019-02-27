@@ -217,7 +217,7 @@ class CertDB:
             iplist = self.db[certid][1]
             iplist.append(ipaddr)
 
-    def printSummary(self):
+    def summary(self):
         print("## Number of distinct certs seen: {}".format(len(self.db)))
         for certid, val in self.db.items():
             _, iplist = val
@@ -241,7 +241,7 @@ class Server:
         return "<Server>: {} {} {}".format(self.ip, self.family, self.host)
 
 
-def getServers(arg):
+def get_servers(arg):
 
     """
     Return a list of Server objects for given IP address or hostname
@@ -271,7 +271,7 @@ def getServers(arg):
         print("ERROR: getaddrinfo({}): {}".format(arg, e))
         return None
     else:
-        for family, stype, proto, canonname, sockaddr in ai_list:
+        for family, _, _, _, sockaddr in ai_list:
             ip = sockaddr[0]
             slist.append(Server(ip=ip, family=family, host=arg, sni=arg))
 
@@ -365,7 +365,7 @@ def summary(certdb):
             Stats.match_ok, Stats.match_fail, Stats.error))
     else:
         print("(ok {}, error {})".format(Stats.ok, Stats.error))
-    certdb.printSummary()
+    certdb.summary()
     return
 
 
@@ -423,15 +423,15 @@ def print_otherextensions(cert):
             print('## AKI: {}'.format(ext_value))
         elif ext_name == 'authorityInfoAccess':
             ext_value = ext_value.rstrip('\n')
-            for v in ext_value.split('\n'):
-                print('## AuthorityInfoAccess: {}'.format(v))
+            for value in ext_value.split('\n'):
+                print('## AuthorityInfoAccess: {}'.format(value))
         elif ext_name == 'certificatePolicies':
             ext_value = ext_value.rstrip('\n')
-            for v in ext_value.split('\n'):
-                v = v.lstrip(' ')
-                if v.startswith('Policy: '):
-                    v = v[8:]
-                print('## Policy: {}'.format(v))
+            for value in ext_value.split('\n'):
+                value = value.lstrip(' ')
+                if value.startswith('Policy: '):
+                    value = value[8:]
+                print('## Policy: {}'.format(value))
         else:
             print('## {}: <present>'.format(ext_name))
 
@@ -476,10 +476,10 @@ def print_tls_info(conn):
         conn.get_version(), conn.get_cipher()))
 
 
-def print_connection_details(server, connection, chain, gotError=False):
+def print_connection_details(server, connection, chain, got_error=False):
     """Print TLS connection and certificate details"""
 
-    if Opts.onlyerror and (not gotError):
+    if Opts.onlyerror and (not got_error):
         return
 
     print("## Host {} address {}".format(server.host, server.ip))
@@ -491,7 +491,7 @@ def print_connection_details(server, connection, chain, gotError=False):
 def check_tls(server, ctx, certdb):
     """Connect to server with TLS, print connection and certificate details"""
 
-    gotError = False
+    got_error = False
     Stats.total_cnt += 1
     conn = get_ssl_connection(ctx, server)
 
@@ -507,13 +507,13 @@ def check_tls(server, ctx, certdb):
         return
     except SSL.Checker.WrongHost:
         if server.sni or Opts.sni:
-            gotError = True
+            got_error = True
             if not Opts.silent and not Opts.onlyerror:
                 print("ERROR: Certificate name mismatch: {} {}".format(
                     server.ip, server.host))
             Stats.error += 1
 
-    if not gotError:
+    if not got_error:
         Stats.ok += 1
 
     chain = conn.get_peer_cert_chain()
@@ -528,7 +528,7 @@ def check_tls(server, ctx, certdb):
         print("{}\t{} {}".format(certid, server.ip, server.host))
 
     if Opts.matchid and (certid != Opts.matchid):
-        gotError = True
+        got_error = True
         Stats.match_fail += 1
         if not Opts.silent:
             print("ERROR: certificate match failed: {} {}".format(
@@ -537,7 +537,7 @@ def check_tls(server, ctx, certdb):
         Stats.match_ok += 1
 
     if Opts.verbose:
-        print_connection_details(server, conn, chain, gotError=gotError)
+        print_connection_details(server, conn, chain, got_error=got_error)
 
     conn.close()
     return
@@ -554,7 +554,7 @@ if __name__ == '__main__':
     for ip_or_host in get_iplist_iterator(args):
         if Opts.infile:
             ip_or_host = ip_or_host.rstrip('\n')
-        serverlist = getServers(ip_or_host)
+        serverlist = get_servers(ip_or_host)
         for server in serverlist:
             try:
                 check_tls(server, ctx, certdb)
