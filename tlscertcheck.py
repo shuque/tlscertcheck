@@ -289,7 +289,7 @@ def get_next_arg(args, infile=None):
         for line in open(infile, 'r'):
             yield line.rstrip('\n')
     else:
-        raise Exception("")
+        raise Exception("Invalid value supplied to get_next_arg()")
 
 
 def get_hostname(ip):
