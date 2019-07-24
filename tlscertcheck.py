@@ -269,7 +269,7 @@ def get_servers(arg):
                                      socket.SOCK_STREAM)
     except socket.gaierror as e:
         print("ERROR: getaddrinfo({}): {}".format(arg, e))
-        return None
+        return slist
     else:
         for family, _, _, _, sockaddr in ai_list:
             ip = sockaddr[0]
