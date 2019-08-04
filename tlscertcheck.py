@@ -321,7 +321,7 @@ def get_ssl_connection(ctx, server):
     sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     sock.settimeout(Opts.timeout)
     conn = SSL.Connection(ctx, sock=sock)
-    sni = server.sni if server.sni else Opts.sni
+    sni = Opts.sni if Opts.sni else server.sni
     if sni:
         if m2have.set_tlsext_host_name:
             conn.set_tlsext_host_name(sni)
