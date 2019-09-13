@@ -300,7 +300,7 @@ def get_hostname(ip):
     """
 
     try:
-        hostname = socket.gethostbyaddr(ip)[0]
+        hostname = socket.getnameinfo((ip, 0), socket.NI_NAMEREQD)[0]
     except socket.herror:
         hostname = "NO_HOSTNAME"
     return hostname
