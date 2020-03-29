@@ -17,6 +17,7 @@ from M2Crypto import SSL
 class Opts:
     """Options class with initialized defaults"""
     port = 443
+    af = socket.AF_UNSPEC
     verbose = False
     printchain = False
     sni = None
@@ -115,6 +116,7 @@ Usage: {0} [Options] <host1> <host2> ...
     --printchain      Print full certificate chain if verbose is specified
     --silent          No output, just set response code
     --port=N          Use specified port (default: {1})
+    --ipversion=N     Use only specified IP version for resolving hosts (4 or 6)
     --sni=<name>      For IP address arguments, set SNI extension to given name
     --match=<id>      Check that certficates match given id
     --usefp           Use SHA1 fingerprint of DER-encoded cert as id
@@ -138,6 +140,7 @@ def process_args(arguments):
         "printchain",
         "silent",
         "port=",
+        "ipversion=",
         "sni=",
         "match=",
         "usefp",
@@ -165,6 +168,13 @@ def process_args(arguments):
             Opts.silent = True
         elif opt == "--port":
             Opts.port = int(optval)
+        elif opt == "--ipversion":
+            if optval == "4":
+                Opts.af = socket.AF_INET
+            elif optval == "6":
+                Opts.af = socket.AF_INET6
+            else:
+                usage('Error: incorrect IP version: {}'.format(optval))
         elif opt == "--sni":
             Opts.sni = optval
         elif opt == "--match":
@@ -265,8 +275,7 @@ def get_servers(arg):
 
     slist = []
     try:
-        ai_list = socket.getaddrinfo(arg, 443, socket.AF_UNSPEC,
-                                     socket.SOCK_STREAM)
+        ai_list = socket.getaddrinfo(arg, 443, Opts.af, socket.SOCK_STREAM)
     except socket.gaierror as e:
         print("ERROR: getaddrinfo({}): {}".format(arg, e))
         return slist

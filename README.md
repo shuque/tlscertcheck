@@ -30,6 +30,7 @@ Usage: tlscertcheck.py [Options] <host1> <host2> ...
     --printchain      Print full certificate chain if verbose is specified
     --silent          No output, just set response code
     --port=N          Use specified port (default: 443)
+    --ipversion=N     Use only specified IP version for resolving hosts (4 or 6)
     --sni=<name>      For IP address arguments, set SNI extension to given name
     --match=<id>      Check that certficates match given id
     --usefp           Use SHA1 fingerprint of DER-encoded cert as id
