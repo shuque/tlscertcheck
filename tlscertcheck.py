@@ -501,7 +501,16 @@ def check_tls(server, ctx, certdb):
 
     got_error = False
     Stats.total_cnt += 1
-    conn = get_ssl_connection(ctx, server)
+
+    try:
+        conn = get_ssl_connection(ctx, server)
+    except OSError as e:
+        if not Opts.silent and not Opts.onlyerror:
+            print("ERROR: OSError {}: {}: {} {}".format(
+                e.errno, e.strerror,
+                server.ip, server.host))
+        Stats.error += 1
+        return
 
     try:
         conn.connect((server.ip, Opts.port))
