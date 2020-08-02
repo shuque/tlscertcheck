@@ -14,6 +14,20 @@ import socket
 from M2Crypto import SSL
 
 
+CACERT_CANDIDATES = [
+    "/etc/ssl/certs/ca-bundle.crt",
+    "/etc/ssl/cert.pem",
+]
+
+
+def find_cacertfile():
+    """Try to find CA cert bundle PEM file in the commonly known locations"""
+    for cafile in CACERT_CANDIDATES:
+        if os.path.isfile(cafile):
+            return cafile
+    return None
+
+
 class Opts:
     """Options class with initialized defaults"""
     port = 443
@@ -26,7 +40,7 @@ class Opts:
     silent = False
     infile = None
     noverify = False
-    cacert = "/etc/ssl/certs/ca-bundle.crt"
+    cacert = find_cacertfile()
     onlyerror = False
     summary = False
     timeout = 10.0
